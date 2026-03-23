@@ -6,50 +6,71 @@ Este documento detalha os passos para configurar o JupyterHub utilizando Docker,
 
 A seguir, são apresentados os comandos necessários para a implantação e configuração do JupyterHub, acompanhados de suas respectivas descrições para facilitar a compreensão.
 
+### 1. Iniciar o contêiner Docker do JupyterHub
+
+Este comando inicia o contêiner do JupyterHub em modo `detached` (segundo plano), mapeia a porta 8000 do host para o contêiner, configura o reinício automático, ativa o suporte a GPU NVIDIA (dispositivo 0), monta o diretório atual para persistência de dados e atribui o nome `jupyterhub` ao contêiner.
+
 ```bash
-# 1. Inicia o contêiner Docker do JupyterHub
-#    -p 8000:8000: Mapeia a porta 8000 do host para a porta 8000 do contêiner, permitindo acesso externo.
-#    -d: Executa o contêiner em modo 'detached' (segundo plano).
-#    --restart unless-stopped: Garante que o contêiner será reiniciado automaticamente, a menos que seja explicitamente parado.
-#    --runtime=nvidia --gpus '"device=0"': Ativa o suporte a GPU NVIDIA, especificando o uso da GPU de índice 0.
-#    -v ./:/home/: Monta o diretório atual do host como /home/ dentro do contêiner, permitindo persistência de dados.
-#    --name jupyterhub: Atribui o nome 'jupyterhub' ao contêiner para fácil identificação.
-#    quay.io/jupyterhub/jupyterhub: Imagem Docker oficial do JupyterHub a ser utilizada.
-#    jupyterhub: Comando para iniciar o serviço JupyterHub dentro do contêiner.
 docker run -p 8000:8000 -d --restart unless-stopped --runtime=nvidia --gpus '"device=0"' -v ./:/home/ --name jupyterhub quay.io/jupyterhub/jupyterhub jupyterhub
+```
 
-# 2. Acessa o shell Bash do contêiner JupyterHub em execução
-#    -it: Permite uma interação interativa com o terminal do contêiner.
-#    jupyterhub: Nome do contêiner alvo.
-#    bash: Comando para iniciar o shell Bash dentro do contêiner.
+### 2. Acessar o shell Bash do contêiner JupyterHub
+
+Este comando permite acessar interativamente o shell Bash dentro do contêiner `jupyterhub` em execução, o que é necessário para realizar configurações internas.
+
+```bash
 docker exec -it jupyterhub bash
+```
 
-# 3. Instala o JupyterLab dentro do contêiner
-#    pip install jupyterlab: Instala a interface de usuário avançada do Jupyter, o JupyterLab.
+### 3. Instalar o JupyterLab
+
+Dentro do contêiner, este comando instala o JupyterLab, que é a interface de usuário avançada para ambientes Jupyter.
+
+```bash
 pip install jupyterlab
+```
 
-# 4. Cria um novo usuário de sistema 'admin' dentro do contêiner
-#    adduser admin: Adiciona um novo usuário de sistema chamado 'admin', que poderá ser usado para login no JupyterHub.
+### 4. Criar um novo usuário de sistema
+
+Este comando cria um novo usuário de sistema chamado `admin` dentro do contêiner. Este usuário poderá ser utilizado para login no JupyterHub.
+
+```bash
 adduser admin
+```
 
-# 5. Configura o JupyterHub para definir usuários administradores e permitir criação automática de usuários
-#    cat > jupyterhub_config.py <<'EOF': Cria ou sobrescreve o arquivo de configuração do JupyterHub.
-#    c = get_config(): Obtém o objeto de configuração do JupyterHub.
-#    c.Authenticator.admin_users = {"admin"}: Define 'admin' como um usuário administrador do JupyterHub.
-#    c.Authenticator.allow_all = True: Permite que qualquer usuário se autentique no JupyterHub.
-#    c.LocalAuthenticator.create_system_users=True: Habilita a criação automática de usuários de sistema no primeiro login.
+### 5. Configurar o JupyterHub
+
+Este bloco de comandos cria ou sobrescreve o arquivo `jupyterhub_config.py` para definir `admin` como um usuário administrador, permitir que qualquer usuário se autentique e habilitar a criação automática de usuários de sistema no primeiro login.
+
+```bash
 cat > jupyterhub_config.py <<'EOF'
 c = get_config()
 c.Authenticator.admin_users = {"admin"}
 c.Authenticator.allow_all = True
 c.LocalAuthenticator.create_system_users=True
 EOF
+```
 
-# 6. Reinicia o contêiner Docker do JupyterHub para aplicar as novas configurações
-#    docker container restart jupyterhub: Reinicia o contêiner para que as alterações no arquivo de configuração sejam efetivadas.
+### 6. Sair do shell do contêiner
+
+Este comando encerra a sessão interativa do shell dentro do contêiner, retornando ao terminal do host.
+
+```bash
+exit
+```
+
+### 7. Reiniciar o contêiner Docker do JupyterHub
+
+Após as alterações de configuração, este comando reinicia o contêiner `jupyterhub` para que as novas configurações sejam efetivadas.
+
+```bash
 docker container restart jupyterhub
+```
 
-# 7. Remove um usuário de sistema e seu diretório home (exemplo de limpeza)
-#    userdel -r username: Exclui o usuário 'username' e remove seu diretório home. Este comando é um exemplo de como remover um usuário e deve ser ajustado conforme a necessidade.
-userdel -r username
+### 8. Acessar o JupyterHub no navegador
+
+Após a conclusão das etapas de configuração e reinício do contêiner, o JupyterHub estará acessível através deste endereço no seu navegador web.
+
+```
+localhost:8000
 ```
